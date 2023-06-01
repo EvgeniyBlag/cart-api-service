@@ -1,0 +1,23 @@
+service: cart-service
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: 'us-east-1'
+  stage: 'dev'
+  environment:
+    PRODUCTS_LAMBDA_FUNCTION: '${cf:product-service-${self:provider.stage}.getProductsListLambdaArn}'
+
+functions:
+  main:
+    handler: dist/main.handler
+    events:
+      - http:
+          method: ANY
+          path: /
+      - http:
+          method: ANY
+          path: '{proxy+}'
