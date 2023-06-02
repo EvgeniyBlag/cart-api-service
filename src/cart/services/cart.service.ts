@@ -28,7 +28,7 @@ export class CartService {
     const { rows: cartItems } = await dbClient.query(cartItemsQuery, [ rows[0].id ]);
 
     const response = await lambda.invoke({
-      FunctionName: process.env.PRODUCTS_LAMBDA_FUNCTION ?? 'arn:aws:lambda:us-east-1:031679763700:function:product-service-dev-getProductsList'
+      FunctionName: process.env.PRODUCTS_LAMBDA_FUNCTION
     }).promise();
 
     const payload = JSON.parse(response.Payload as string);

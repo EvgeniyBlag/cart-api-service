@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { v4 } from 'uuid';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { Client } from 'pg';
 
 import { User } from '../models';

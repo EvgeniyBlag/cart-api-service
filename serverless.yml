@@ -10,6 +10,15 @@ provider:
   stage: 'dev'
   environment:
     PRODUCTS_LAMBDA_FUNCTION: '${cf:product-service-${self:provider.stage}.getProductsListLambdaArn}'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action: 'lambda:InvokeFunction'
+          Resource: '*'
+        - Effect: Allow
+          Action: 'lambda:InvokeAsync'
+          Resource: '*'
 
 functions:
   main:
