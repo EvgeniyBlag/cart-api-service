@@ -1,4 +1,4 @@
-import { Controller, Get, Delete, Put, Body, Req, Post, UseGuards, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Delete, Put, Body, Req, Post, Param, HttpStatus } from '@nestjs/common';
 
 // import { BasicAuthGuard, JwtAuthGuard } from '../auth';
 import { OrderService } from '../order';
@@ -16,9 +16,9 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   // @UseGuards(BasicAuthGuard)
-  @Get()
-  findUserCart(@Req() req: AppRequest) {
-    const cart = this.cartService.findOrCreateByUserId(getUserIdFromRequest(req));
+  @Get(':userId')
+  async findUserCart(@Param() params: any) {
+    const cart = await this.cartService.findOrCreateByUserId(params.userId);
 
     return {
       statusCode: HttpStatus.OK,
@@ -30,8 +30,8 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   // @UseGuards(BasicAuthGuard)
   @Put()
-  updateUserCart(@Req() req: AppRequest, @Body() body) { // TODO: validate body payload...
-    const cart = this.cartService.updateByUserId(getUserIdFromRequest(req), body)
+  async updateUserCart(@Body() body) {
+    const cart = await this.cartService.updateByUserId(body.user.id, body);
 
     return {
       statusCode: HttpStatus.OK,
@@ -45,9 +45,9 @@ export class CartController {
 
   // @UseGuards(JwtAuthGuard)
   // @UseGuards(BasicAuthGuard)
-  @Delete()
-  clearUserCart(@Req() req: AppRequest) {
-    this.cartService.removeByUserId(getUserIdFromRequest(req));
+  @Delete(':userId')
+  clearUserCart(@Param() params: any) {
+    this.cartService.removeByUserId(params.userId);
 
     return {
       statusCode: HttpStatus.OK,
@@ -58,9 +58,9 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   // @UseGuards(BasicAuthGuard)
   @Post('checkout')
-  checkout(@Req() req: AppRequest, @Body() body) {
-    const userId = getUserIdFromRequest(req);
-    const cart = this.cartService.findByUserId(userId);
+  async checkout(@Req() req: AppRequest, @Body() body) {
+    const userId = body.user.id;
+    const cart = await this.cartService.findByUserId(userId);
 
     if (!(cart && cart.items.length)) {
       const statusCode = HttpStatus.BAD_REQUEST;
@@ -74,10 +74,21 @@ export class CartController {
 
     const { id: cartId, items } = cart;
     const total = calculateCartTotal(cart);
+
+    if (total === 0) {
+      const statusCode = HttpStatus.BAD_REQUEST;
+      req.statusCode = statusCode
+
+      return {
+        statusCode,
+        message: 'Total cost is equal to 0',
+      }
+    }
+
     const order = this.orderService.create({
-      ...body, // TODO: validate and pick only necessary data
-      userId,
-      cartId,
+      ...body,
+      user_id: userId,
+      cart_id: cartId,
       items,
       total,
     });
